@@ -102,7 +102,8 @@ router.get('/notes/:id', (req, res, next) => {
 // });
 
 router.put('/notes/:id', (req, res, next) => {
-  //const noteId = req.params.id;
+  const noteId = req.params.id;
+  const { title, content } = req.body;
   /***** Never trust users - validate input *****/
   const updateObj = {};
   const updateableFields = ['title', 'content'];
@@ -121,8 +122,8 @@ router.put('/notes/:id', (req, res, next) => {
   }
 
   knex('notes')
-    .update({title:'Lakers cats'})
-    .where({'notes.id': '1004'})
+    .update({title: title, content: content})
+    .where({'notes.id': noteId})
     //   .returning(['id', 'name']) 
     .then(result => {
       if (result) {
