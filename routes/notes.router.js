@@ -52,14 +52,14 @@ router.get('/notes', (req, res, next) => {
 // });
 //works
 router.get('/notes/:id', (req, res, next) => {
-  // const noteId = req.params.id;
+  const noteId = req.params.id;
 
   knex.select('id', 'title', 'content')//
     .from('notes')//
-    .where({'notes.id': '1004'})//
+    .where({'notes.id': noteId})//
     .then(result => {//
       if (result) {
-        res.json(result);
+        res.json(result[0]);
       } else {
         next();
       }
@@ -102,7 +102,7 @@ router.get('/notes/:id', (req, res, next) => {
 // });
 
 router.put('/notes/:id', (req, res, next) => {
-  const noteId = req.params.id;
+  //const noteId = req.params.id;
   /***** Never trust users - validate input *****/
   const updateObj = {};
   const updateableFields = ['title', 'content'];
@@ -181,14 +181,14 @@ router.post('/notes', (req, res, next) => {
 
   knex
     .insert({
-      title: 'Vegan cats',
-      content: 'not found. not found. data. data.'
+      title: title,
+      content: content
     })
     .returning(['id', 'title', 'content'])
     .into('notes')
     .then(result => {
       if (result) {
-        res.location(`http://${req.headers.host}/notes/${item.id}`).status(201).json(result);
+        res.location(`http://${req.headers.host}/notes/${result.id}`).status(201).json(result);
       } 
     })
     .catch(next);
