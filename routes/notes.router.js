@@ -145,18 +145,30 @@ router.put('/:id', (req, res, next) => {
     return next(err);
   }
 
-  knex('notes')
-    .update({title: title, content: content})
+  knex.select('id, title', 'content')
+    .from('notes')
     .where({id: noteId})
-    //   .returning(['id', 'name']) 
-    .then(([result]) => {
-      if (result) {
-        res.json(result);
+    .update(updateObj)
+    .returning(['id', 'title', 'content'])
+    .then(([results])=> {
+      if(results) {
+        res.json(results);
       } else {
         next();
       }
     })
-    .catch(next);
+    .catch(err => next(err));
+  // .update({title: title, content: content})
+  // .where({id: noteId})
+  // //   .returning(['id', 'name']) 
+  // .then(([result]) => {
+  //   if (result) {
+  //     res.json(result);
+  //   } else {
+  //     next();
+  //   }
+  // })
+  // .catch(next);
   
   /*
   notes.update(noteId, updateObj)
