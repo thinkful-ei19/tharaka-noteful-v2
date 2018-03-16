@@ -29,7 +29,7 @@ router.get('/', (req, res, next) => {
     })
     .modify(function (queryBuilder) {
       if (folderId) {
-        queryBuilder.where('folderId', folderId);
+        queryBuilder.where('folder_id', folderId);
       }
     })
     .orderBy('notes.id')
@@ -79,7 +79,7 @@ router.get('/:id', (req, res, next) => {
     .leftJoin('folders', 'notes.folder_id', 'folders.id')
     .modify(function (queryBuilder) {
       if (folderId) {
-        queryBuilder.where('folderId', folderId);
+        queryBuilder.where('folder_id', folderId);
       }
     })
     .orderBy('notes.id')
@@ -127,37 +127,64 @@ router.get('/:id', (req, res, next) => {
 
 router.put('/:id', (req, res, next) => {
   const noteId = req.params.id;
-  const { title, content } = req.body;
+  const { title, content, folder_id } = req.body;
   /***** Never trust users - validate input *****/
-  const updateObj = {};
-  const updateableFields = ['title', 'content'];
-
-  updateableFields.forEach(field => {
-    if (field in req.body) {
-      updateObj[field] = req.body[field];
-    }
-  });
-
-  /***** Never trust users - validate input *****/
-  if (!updateObj.title) {
-    const err = new Error('Missing `title` in request body');
+  if(!title) {
+    const err = new Error('Missing title in request');
     err.status = 400;
     return next(err);
   }
 
-  knex.select('id, title', 'content')
-    .from('notes')
-    .where({id: noteId})
-    .update(updateObj)
-    .returning(['id', 'title', 'content'])
-    .then(([results])=> {
-      if(results) {
-        res.json(results);
+  const updateItem = {
+    title: title,
+    content: content,
+    folder_id: folder_id
+  };
+
+  knex('notes')
+    .update(updateItem) 
+    .where('id', noteId)
+    .returning(['id'])
+    .then(() => {
+      return knex.select('notes.id', 'title', 'content')
+        .from('notes')
+        .leftJoin('folders', 'notes.folder_id', 'folders.id')
+        .where('notes.id', noteId);
+    })
+    .then(([result]) => {
+      if(result) {
+        res.json(result);
       } else {
         next();
       }
     })
     .catch(err => next(err));
+  // updateableFields.forEach(field => {
+  //   if (field in req.body) {
+  //     updateObj[field] = req.body[field];
+  //   }
+  // });
+
+  /***** Never trust users - validate input *****/
+  // if (!updateObj.title) {
+  //   const err = new Error('Missing `title` in request body');
+  //   err.status = 400;
+  //   return next(err);
+  // }
+
+  // knex.select('id, title', 'content')
+  //   .from('notes')
+  //   .where({id: noteId})
+  //   .update(updateObj)
+  //   .returning(['id', 'title', 'content'])
+  //   .then(([results])=> {
+  //     if(results) {
+  //       res.json(results);
+  //     } else {
+  //       next();
+  //     }
+  //   })
+  //   .catch(err => next(err));
   // .update({title: title, content: content})
   // .where({id: noteId})
   // //   .returning(['id', 'name']) 
